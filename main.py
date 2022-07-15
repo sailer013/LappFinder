@@ -1,14 +1,19 @@
+import openpyxl
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import requests
 from bs4 import BeautifulSoup
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 class LappFinder:
     def __init__(self):
-        self.service = Service(r"C:\Users\mszpa\Downloads\chromedriver_win32 (5)\chromedriver.exe")
+        self.service = Service("chromedriver.exe")
+        self.options = webdriver.ChromeOptions()
+        self.options.add_argument('headless')
+        self.options.add_argument('window-size=1920x1080')
+        self.options.add_argument("disable-gpu")
 
     def find_element_by_class(self, class_name):
         self.driver.implicitly_wait(2)
@@ -22,7 +27,7 @@ class LappFinder:
 
     def get_url_rs_online(self, part_number):
         product_url_list = []
-        self.driver = webdriver.Chrome(service=self.service)
+        self.driver = webdriver.Chrome(service=self.service, options=self.options)
         self.driver.get('https://uk.rs-online.com/web/')
         accept_cookie_button = self.find_element_by_id('ensCloseBanner')
         accept_cookie_button.click()
@@ -42,7 +47,7 @@ class LappFinder:
             for product in products:
                 product_url_list.append(product.get_attribute('href'))
         except:
-            pass
+            products = []
         if not products:
             product_url_list.append(self.driver.current_url)
         self.driver.quit()
@@ -90,11 +95,16 @@ class LappFinder:
                 values_list.append(row.strip())
         return values_list
 
-    def details_to_excel(self, data):
+    def clear_excel(self):
         wb = Workbook()
         ws = wb.active
         headers = ['Input', 'Nr', 'Name', 'Stock No.', 'Price', 'Avability', 'Link']
         ws.append(headers)
+        wb.save('LappFinder.xlsx')
+
+    def details_to_excel(self, data):
+        wb = load_workbook('LappFinder.xlsx')
+        ws = wb.active
         for row in data:
             for val in row:
                 ws.append(val)
@@ -102,7 +112,7 @@ class LappFinder:
 
     def main(self):
         values = self.load_values('Input.txt')
-
+        self.clear_excel()
         for value in values:
             data_list = []
             product_url, part_number = self.get_url_rs_online(value)
