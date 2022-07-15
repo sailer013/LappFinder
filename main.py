@@ -11,9 +11,9 @@ class LappFinder:
     def __init__(self):
         self.service = Service("chromedriver.exe")
         self.options = webdriver.ChromeOptions()
-        self.options.add_argument('headless')
-        self.options.add_argument('window-size=1920x1080')
-        self.options.add_argument("disable-gpu")
+        # self.options.add_argument('headless')
+        # self.options.add_argument('window-size=1920x1080')
+        # self.options.add_argument("disable-gpu")
 
     def find_element_by_class(self, class_name):
         self.driver.implicitly_wait(2)
@@ -61,7 +61,7 @@ class LappFinder:
                 product_details_list = []
                 r = requests.get(link)
                 soup = BeautifulSoup(r.text, 'html.parser')
-                input_nr = product_details_list.append(part_number)
+                product_details_list.append(part_number)
                 try:
                     mfr_number = soup.select_one('dt:-soup-contains("Mfr") + dd').text
                     product_details_list.append(mfr_number)
@@ -76,6 +76,11 @@ class LappFinder:
                     product_details_list.append('N/A')
                 price = soup.find('p', attrs={'data-testid': 'price-exc-vat'}).text
                 product_details_list.append(price)
+                try:
+                    volume = soup.find('p', attrs={'data-testid':'price-heading'}).text
+                    product_details_list.append(volume)
+                except:
+                    product_details_list.append('N/A')
                 try:
                     availability = soup.find('div', attrs={'data-testid': 'stock-status-0'}).text
                 except:
@@ -98,7 +103,7 @@ class LappFinder:
     def clear_excel(self):
         wb = Workbook()
         ws = wb.active
-        headers = ['Input', 'Nr', 'Name', 'Stock No.', 'Price', 'Avability', 'Link']
+        headers = ['Input', 'Nr', 'Name', 'Stock No.', 'Price', 'Volume', 'Avability', 'Link']
         ws.append(headers)
         wb.save('LappFinder.xlsx')
 
