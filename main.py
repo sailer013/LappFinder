@@ -1,4 +1,5 @@
 import openpyxl
+import selenium.common.exceptions
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -11,9 +12,9 @@ class LappFinder:
     def __init__(self):
         self.service = Service("chromedriver.exe")
         self.options = webdriver.ChromeOptions()
-        # self.options.add_argument('headless')
-        # self.options.add_argument('window-size=1920x1080')
-        # self.options.add_argument("disable-gpu")
+        self.options.add_argument('headless')
+        self.options.add_argument('window-size=1920x1080')
+        self.options.add_argument("disable-gpu")
 
     def find_element_by_class(self, class_name):
         self.driver.implicitly_wait(2)
@@ -35,12 +36,12 @@ class LappFinder:
         self.driver.implicitly_wait(3)
         search_bar.send_keys(part_number)
         self.driver.implicitly_wait(4)
-        search_bar.send_keys(Keys.ENTER)
         try:
+            search_bar.send_keys(Keys.ENTER)
             category = self.driver.find_element(By.CSS_SELECTOR, "a[data-qa='category-button']")
             category.click()
             self.driver.implicitly_wait(3)
-        except:
+        except selenium.common.exceptions.WebDriverException:
             pass
         try:
             products = self.driver.find_elements(By.CSS_SELECTOR, "a[data-qa='product-tile-container']")
@@ -60,6 +61,9 @@ class LappFinder:
                 print(part_number)
                 product_details_list = []
                 r = requests.get(link)
+                if r'"Sorry, we couldn\'t find any results' in r.text:
+                    all_product_details_list.append([part_number, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'])
+                    continue
                 soup = BeautifulSoup(r.text, 'html.parser')
                 product_details_list.append(part_number)
                 try:
